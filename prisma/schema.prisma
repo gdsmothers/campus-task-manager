@@ -1,0 +1,72 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TaskPriority {
+  LOW
+  MED
+  HIGH
+}
+
+enum TaskState {
+  PLANNED
+  IN_PROGRESS
+  COMPLETED
+  OVERDUE
+}
+
+enum NotifChannel {
+  EMAIL
+}
+
+enum NotifStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String?
+  email        String   @unique
+  passwordHash String?
+  createdAt    DateTime @default(now())
+
+  tasks        Task[]
+  reminders    Reminder[]   
+}
+
+model Task {
+  id        String      @id @default(cuid())
+  userId    String
+  title     String
+  dueAt     DateTime?
+  priority  TaskPriority @default(MED)
+  state     TaskState   @default(PLANNED)
+  createdAt DateTime    @default(now())
+
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reminders Reminder[]  
+}
+
+model Reminder {
+  id        String       @id @default(cuid())
+  userId    String
+  taskId    String
+  remindAt  DateTime
+  channel   NotifChannel @default(EMAIL)
+  sentAt    DateTime?
+  status    NotifStatus  @default(PENDING)
+
+  user      User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task      Task @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status, remindAt])
+}
