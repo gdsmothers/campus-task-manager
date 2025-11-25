@@ -91,6 +91,16 @@ export default function TasksPanel() {
 
   return (
     <div className="space-y-6">
+        <button
+        onClick={async () => {
+          const res = await fetch("/api/reminders/run", { method: "POST" });
+          const data = await res.json();
+          alert(`Processed ${data.sentCount} reminders.`);
+        }}
+        className="px-3 py-2 mb-2 rounded bg-purple-600 text-white text-sm hover:bg-purple-700"
+      >
+        Run Reminders (Demo)
+      </button>
       <section className="bg-white p-4 rounded-xl shadow">
         <h2 className="text-lg font-semibold mb-3">Add Task</h2>
         <form className="space-y-3" onSubmit={handleCreate}>

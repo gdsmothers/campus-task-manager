@@ -9,7 +9,7 @@ function getUserFromRequest(req: NextRequest) {
   return verifyAuthToken(token);
 }
 
-// For now: manual "run reminders" endpoint you can call from browser or Postman.
+// Manual "run reminders" endpoint you can trigger from the UI
 export async function POST(req: NextRequest) {
   const user = getUserFromRequest(req);
   if (!user) {
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     include: { task: true },
   });
 
-  // Simulate sending
+  // Simulate sending (logs to server console)
   console.log("Sending reminders for user:", user.email);
   for (const r of reminders) {
     console.log(
