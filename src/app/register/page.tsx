@@ -29,7 +29,7 @@ export default function RegisterPage() {
               id="name"
               name="name"
               type="text"
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white/90 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white/90 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400"
               placeholder="Your name"
             />
           </div>
@@ -46,7 +46,7 @@ export default function RegisterPage() {
               name="email"
               type="email"
               required
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white/90 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white/90 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400"
               placeholder="you@school.edu"
             />
           </div>
@@ -63,7 +63,7 @@ export default function RegisterPage() {
               name="password"
               type="password"
               required
-              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white/90 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white/90 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400"
               placeholder="Create a password"
             />
           </div>

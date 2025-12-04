@@ -5,7 +5,11 @@ import { createAuthToken } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
-    const { name, email, password } = await req.json();
+    // 🔁 CHANGED: Read form data instead of JSON
+    const form = await req.formData();
+    const name = form.get("name") as string | null;
+    const email = form.get("email") as string | null;
+    const password = form.get("password") as string | null;
 
     if (!email || !password) {
       return NextResponse.json(
@@ -26,7 +30,7 @@ export async function POST(req: NextRequest) {
 
     const user = await prisma.user.create({
       data: {
-        name,
+        name: name || undefined,
         email,
         passwordHash,
       },
@@ -34,16 +38,14 @@ export async function POST(req: NextRequest) {
 
     const token = createAuthToken({ userId: user.id, email: user.email });
 
-    const res = NextResponse.json({
-      message: "Registered",
-      user: { id: user.id, email: user.email },
-    });
+    // 🎯 CHANGED: redirect to dashboard instead of returning JSON
+    const res = NextResponse.redirect(new URL("/dashboard", req.url));
 
-    // Set auth cookie
+    // Set the auth cookie like before
     res.cookies.set("ctm_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
-      maxAge: 7 * 24 * 60 * 60, // 7 days
+      maxAge: 7 * 24 * 60 * 60,
       path: "/",
     });
 
