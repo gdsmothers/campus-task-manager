@@ -1,82 +1,18 @@
-// src/app/login/page.tsx
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-
 export default function LoginPage() {
-  const router = useRouter();
-  const [form, setForm] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-
-    try {
-      const res = await fetch("/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Login failed");
-        return;
-      }
-
-      router.push("/dashboard");
-    } catch {
-      setError("Something went wrong");
-    }
-  }
+  // keep your handlers / state as before
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-xl shadow w-full max-w-md space-y-4"
-      >
-        <h1 className="text-2xl font-semibold text-center">Log in</h1>
-
-        {error && <p className="text-sm text-red-600">{error}</p>}
-
-        <div>
-          <label className="block text-sm mb-1">Email</label>
-          <input
-            className="w-full border rounded px-3 py-2"
-            type="email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm mb-1">Password</label>
-          <input
-            className="w-full border rounded px-3 py-2"
-            type="password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white rounded py-2 font-medium hover:bg-blue-700"
-        >
-          Log in
-        </button>
-
-        <p className="text-sm text-center">
-          Need an account?{" "}
-          <a href="/register" className="text-blue-600 underline">
-            Create one
-          </a>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-900 to-slate-900 flex items-center justify-center px-4">
+      <div className="max-w-md w-full rounded-3xl bg-white/90 shadow-xl border border-purple-200/60 p-6 space-y-4">
+        <h1 className="text-2xl font-semibold text-slate-900">
+          Welcome back
+        </h1>
+        <p className="text-xs text-slate-500">
+          Sign in to your Campus Task Manager account to view your dashboard.
         </p>
-      </form>
+
+        {/* your actual <form> goes here, with email/password inputs */}
+      </div>
     </div>
   );
 }

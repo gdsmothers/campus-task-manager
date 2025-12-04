@@ -1,201 +1,255 @@
-// src/app/dashboard/tasks-panel.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 
-type Task = {
+type TaskPriority = "LOW" | "MED" | "HIGH";
+type TaskState = "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "OVERDUE";
+
+interface Task {
   id: string;
   title: string;
-  state: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "OVERDUE";
   dueAt: string | null;
-  priority: "LOW" | "MED" | "HIGH";
-};
+  priority: TaskPriority;
+  state: TaskState;
+}
 
 export default function TasksPanel() {
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [form, setForm] = useState({
-    title: "",
-    dueAt: "",
-    priority: "MED",
-  });
+  const [title, setTitle] = useState("");
+  const [dueAt, setDueAt] = useState<string>("");
+  const [priority, setPriority] = useState<TaskPriority>("MED");
+  const [filter, setFilter] = useState<"ALL" | TaskPriority>("ALL");
+  const [loading, setLoading] = useState(false);
 
   async function loadTasks() {
     setLoading(true);
-    setError("");
-    try {
-      const res = await fetch("/api/tasks");
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Failed to load tasks");
-      } else {
-        setTasks(data.tasks || []);
-      }
-    } catch {
-      setError("Failed to load tasks");
-    } finally {
-      setLoading(false);
-    }
+    const res = await fetch("/api/tasks");
+    const data = await res.json();
+    setTasks(data.tasks ?? []);
+    setLoading(false);
   }
 
   useEffect(() => {
     loadTasks();
   }, []);
 
-  async function handleCreate(e: React.FormEvent) {
+  async function handleAddTask(e: React.FormEvent) {
     e.preventDefault();
-    if (!form.title.trim()) return;
+    if (!title.trim()) return;
 
-    try {
-      const res = await fetch("/api/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        alert(data.error || "Failed to create task");
-        return;
+    const body: any = { title, priority };
+    if (dueAt) body.dueAt = dueAt;
+
+    const res = await fetch("/api/tasks", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (res.ok) {
+      setTitle("");
+      setDueAt("");
+      setPriority("MED");
+      await loadTasks();
+    }
+  }
+
+  async function handleComplete(id: string) {
+    await fetch(`/api/tasks/${id}`, { method: "PATCH" });
+    await loadTasks();
+  }
+
+  async function handleDelete(id: string) {
+    await fetch(`/api/tasks/${id}`, { method: "DELETE" });
+    await loadTasks();
+  }
+
+  function getEffectivePriority(task: Task): TaskPriority {
+    if (task.dueAt && task.state !== "COMPLETED") {
+      const due = new Date(task.dueAt);
+      const now = new Date();
+      const diffMs = due.getTime() - now.getTime();
+      const diffHours = diffMs / (1000 * 60 * 60);
+      if (diffHours <= 24) {
+        return "HIGH";
       }
-      setForm({ title: "", dueAt: "", priority: "MED" });
-      loadTasks();
-    } catch {
-      alert("Failed to create task");
+    }
+    return task.priority;
+  }
+
+  function priorityBadgeClass(p: TaskPriority) {
+    switch (p) {
+      case "HIGH":
+        return "bg-red-100 text-red-700 border-red-200";
+      case "MED":
+        return "bg-blue-100 text-blue-700 border-blue-200";
+      case "LOW":
+        return "bg-purple-100 text-purple-700 border-purple-200";
     }
   }
 
-  async function markComplete(id: string) {
-    try {
-      await fetch(`/api/tasks/${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ state: "COMPLETED" }),
-      });
-      loadTasks();
-    } catch {
-      alert("Failed to update task");
-    }
-  }
-
-  async function deleteTask(id: string) {
-    try {
-      await fetch(`/api/tasks/${id}`, {
-        method: "DELETE",
-      });
-      loadTasks();
-    } catch {
-      alert("Failed to delete task");
-    }
-  }
+  const filteredTasks = tasks.filter((t) => {
+    if (filter === "ALL") return true;
+    const eff = getEffectivePriority(t);
+    return eff === filter;
+  });
 
   return (
     <div className="space-y-6">
-        <button
+      {/* Demo button for reminders */}
+      <button
         onClick={async () => {
           const res = await fetch("/api/reminders/run", { method: "POST" });
           const data = await res.json();
           alert(`Processed ${data.sentCount} reminders.`);
         }}
-        className="px-3 py-2 mb-2 rounded bg-purple-600 text-white text-sm hover:bg-purple-700"
+        className="px-3 py-2 rounded-lg bg-purple-600 text-white text-xs font-medium hover:bg-purple-700 shadow-sm"
       >
         Run Reminders (Demo)
       </button>
-      <section className="bg-white p-4 rounded-xl shadow">
-        <h2 className="text-lg font-semibold mb-3">Add Task</h2>
-        <form className="space-y-3" onSubmit={handleCreate}>
-          <div>
-            <label className="block text-sm mb-1">Title</label>
+
+      {/* Add task form */}
+      <div className="rounded-2xl bg-white/80 shadow-sm border border-slate-200 p-4 space-y-3">
+        <h3 className="text-sm font-semibold text-slate-800">
+          Add a new task
+        </h3>
+        <form
+          onSubmit={handleAddTask}
+          className="flex flex-col md:flex-row gap-3 items-stretch md:items-end"
+        >
+          <div className="flex-1 space-y-1">
+            <label className="text-xs text-slate-500">Task title</label>
             <input
-              className="w-full border rounded px-3 py-2"
-              value={form.title}
-              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 bg-white/90"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="e.g., CS exam review, project draft..."
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm mb-1">Due date & time</label>
-              <input
-                type="datetime-local"
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={form.dueAt}
-                onChange={(e) => setForm({ ...form, dueAt: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="block text-sm mb-1">Priority</label>
-              <select
-                className="w-full border rounded px-3 py-2 text-sm"
-                value={form.priority}
-                onChange={(e) =>
-                  setForm({ ...form, priority: e.target.value as Task["priority"] })
-                }
-              >
-                <option value="LOW">Low</option>
-                <option value="MED">Medium</option>
-                <option value="HIGH">High</option>
-              </select>
-            </div>
+          <div className="space-y-1">
+            <label className="text-xs text-slate-500">Due date</label>
+            <input
+              type="datetime-local"
+              className="rounded-xl border border-slate-200 px-3 py-2 text-xs bg-white/90 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400"
+              value={dueAt}
+              onChange={(e) => setDueAt(e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label className="text-xs text-slate-500">Priority</label>
+            <select
+              className="rounded-xl border border-slate-200 px-3 py-2 text-xs bg-white/90 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400"
+              value={priority}
+              onChange={(e) => setPriority(e.target.value as TaskPriority)}
+            >
+              <option value="LOW">Low</option>
+              <option value="MED">Medium</option>
+              <option value="HIGH">High</option>
+            </select>
           </div>
 
           <button
             type="submit"
-            className="px-4 py-2 rounded bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            className="md:w-auto w-full rounded-xl bg-gradient-to-r from-purple-600 via-blue-500 to-red-500 text-white text-xs font-semibold px-4 py-2 shadow-sm hover:opacity-90"
           >
-            Create Task
+            Add Task
           </button>
         </form>
-      </section>
+      </div>
 
-      <section className="bg-white p-4 rounded-xl shadow">
-        <h2 className="text-lg font-semibold mb-3">Your Tasks</h2>
+      {/* Filter bar */}
+      <div className="flex flex-wrap gap-2 text-xs">
+        {["ALL", "HIGH", "MED", "LOW"].map((f) => (
+          <button
+            key={f}
+            onClick={() => setFilter(f as any)}
+            className={`px-3 py-1 rounded-full border text-xs font-medium ${
+              filter === f
+                ? "bg-purple-600 text-white border-purple-600"
+                : "bg-white/80 text-slate-600 border-slate-200 hover:bg-purple-50"
+            }`}
+          >
+            {f === "ALL" ? "All" : `${f.charAt(0)}${f.slice(1).toLowerCase()} priority`}
+          </button>
+        ))}
+      </div>
 
-        {loading && <p className="text-sm text-slate-500">Loading…</p>}
-        {error && <p className="text-sm text-red-600">{error}</p>}
+      {/* Task list */}
+      <div className="rounded-2xl bg-white/80 shadow-sm border border-slate-200 p-4 space-y-3">
+        <div className="flex justify-between items-center">
+          <h3 className="text-sm font-semibold text-slate-800">
+            Upcoming tasks
+          </h3>
+          {loading && (
+            <span className="text-xs text-slate-400">Loading...</span>
+          )}
+        </div>
 
-        {!loading && tasks.length === 0 && !error && (
-          <p className="text-sm text-slate-500">No tasks yet. Add one above.</p>
+        {filteredTasks.length === 0 && (
+          <p className="text-xs text-slate-500">
+            No tasks to show. Add a task above to get started.
+          </p>
         )}
 
         <ul className="space-y-2">
-          {tasks.map((task) => (
-            <li
-              key={task.id}
-              className="flex items-center justify-between border rounded px-3 py-2"
-            >
-              <div>
-                <div className="font-medium">
-                  {task.title}{" "}
-                  {task.state === "COMPLETED" && (
-                    <span className="text-xs text-green-600 ml-1">[Done]</span>
+          {filteredTasks.map((task) => {
+            const effPriority = getEffectivePriority(task);
+            const dueText = task.dueAt
+              ? new Date(task.dueAt).toLocaleString()
+              : "No due date";
+
+            return (
+              <li
+                key={task.id}
+                className="flex flex-col md:flex-row md:items-center justify-between gap-2 rounded-xl border border-slate-100 bg-slate-50/80 px-3 py-2"
+              >
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-slate-800">
+                      {task.title}
+                    </span>
+                    <span
+                      className={
+                        "text-[10px] px-2 py-0.5 rounded-full border font-semibold " +
+                        priorityBadgeClass(effPriority)
+                      }
+                    >
+                      {effPriority}
+                    </span>
+                    {task.state === "COMPLETED" && (
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200">
+                        Completed
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500">
+                    {dueText}
+                  </p>
+                </div>
+
+                <div className="flex gap-2 text-[11px]">
+                  {task.state !== "COMPLETED" && (
+                    <button
+                      onClick={() => handleComplete(task.id)}
+                      className="px-2 py-1 rounded-lg bg-emerald-500 text-white hover:bg-emerald-600"
+                    >
+                      Complete
+                    </button>
                   )}
-                </div>
-                <div className="text-xs text-slate-500">
-                  Priority: {task.priority}
-                  {task.dueAt && ` • Due: ${new Date(task.dueAt).toLocaleString()}`}
-                </div>
-              </div>
-              <div className="flex gap-2">
-                {task.state !== "COMPLETED" && (
                   <button
-                    onClick={() => markComplete(task.id)}
-                    className="text-xs px-2 py-1 rounded bg-emerald-500 text-white hover:bg-emerald-600"
+                    onClick={() => handleDelete(task.id)}
+                    className="px-2 py-1 rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300"
                   >
-                    Complete
+                    Delete
                   </button>
-                )}
-                <button
-                  onClick={() => deleteTask(task.id)}
-                  className="text-xs px-2 py-1 rounded bg-red-500 text-white hover:bg-red-600"
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-          ))}
+                </div>
+              </li>
+            );
+          })}
         </ul>
-      </section>
+      </div>
     </div>
   );
 }
