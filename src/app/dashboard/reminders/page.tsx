@@ -1,4 +1,3 @@
-// src/app/dashboard/reminders/page.tsx
 export default function RemindersSettingsPage() {
     return (
       <div className="space-y-3">

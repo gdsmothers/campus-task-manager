@@ -1,4 +1,3 @@
-// src/app/dashboard/priority/page.tsx
 export default function PrioritySettingsPage() {
     return (
       <div className="space-y-3">

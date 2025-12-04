@@ -1,4 +1,3 @@
-// src/app/dashboard/page.tsx
 import TasksPanel from "./tasks-panel";
 
 export default function DashboardPage() {
