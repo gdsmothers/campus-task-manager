@@ -1,17 +1,74 @@
+import Link from "next/link";
+
 export default function LoginPage() {
-  // keep your handlers / state as before
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-900 to-slate-900 flex items-center justify-center px-4">
-      <div className="max-w-md w-full rounded-3xl bg-white/90 shadow-xl border border-purple-200/60 p-6 space-y-4">
-        <h1 className="text-2xl font-semibold text-slate-900">
-          Welcome back
-        </h1>
-        <p className="text-xs text-slate-500">
-          Sign in to your Campus Task Manager account to view your dashboard.
-        </p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-900 to-slate-900 flex items-center justify-center px-6">
+      <div className="w-full max-w-md rounded-3xl bg-white/95 shadow-2xl border border-purple-200/70 p-6 space-y-5">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-slate-900">
+            Welcome back 👋
+          </h1>
+          <p className="text-xs text-slate-500">
+            Log in to access your Campus Task Manager dashboard.
+          </p>
+        </div>
 
-        {/* your actual <form> goes here, with email/password inputs */}
+        <form
+          action="/api/login"
+          method="POST"
+          className="space-y-4 mt-3"
+        >
+          <div className="space-y-1">
+            <label
+              htmlFor="email"
+              className="text-xs font-medium text-slate-600"
+            >
+              School email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white/90 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400"
+              placeholder="you@school.edu"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label
+              htmlFor="password"
+              className="text-xs font-medium text-slate-600"
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white/90 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400"
+              placeholder="••••••••"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full mt-2 rounded-xl bg-gradient-to-r from-purple-600 via-blue-500 to-red-500 text-white text-sm font-semibold px-4 py-2.5 shadow-md hover:opacity-90"
+          >
+            Log in
+          </button>
+        </form>
+
+        <p className="text-xs text-slate-500 text-center">
+          Don&apos;t have an account?{" "}
+          <Link
+            href="/register"
+            className="text-purple-600 font-medium hover:underline"
+          >
+            Create one
+          </Link>
+        </p>
       </div>
     </div>
   );

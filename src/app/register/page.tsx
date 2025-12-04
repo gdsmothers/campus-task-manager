@@ -1,88 +1,91 @@
-"use client";
-
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function RegisterPage() {
-  const router = useRouter();
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [error, setError] = useState("");
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    setError("");
-    try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || "Registration failed");
-        return;
-      }
-
-      router.push("/dashboard");
-    } catch {
-      setError("Something went wrong. Try again.");
-    }
-  }
-
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-6 rounded-xl shadow w-full max-w-md space-y-4"
-      >
-        <h1 className="text-2xl font-semibold text-center">Create your account</h1>
-
-        {error && <p className="text-sm text-red-600">{error}</p>}
-
-        <div>
-          <label className="block text-sm mb-1">Name</label>
-          <input
-            className="w-full border rounded px-3 py-2"
-            value={form.name}
-            onChange={(e) => setForm({ ...form, name: e.target.value })}
-          />
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-900 to-slate-900 flex items-center justify-center px-6">
+      <div className="w-full max-w-md rounded-3xl bg-white/95 shadow-2xl border border-purple-200/70 p-6 space-y-5">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold text-slate-900">
+            Create your account ✨
+          </h1>
+          <p className="text-xs text-slate-500">
+            Sign up to start organizing your assignments, priorities, and reminders.
+          </p>
         </div>
 
-        <div>
-          <label className="block text-sm mb-1">Email</label>
-          <input
-            className="w-full border rounded px-3 py-2"
-            type="email"
-            value={form.email}
-            onChange={(e) => setForm({ ...form, email: e.target.value })}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm mb-1">Password</label>
-          <input
-            className="w-full border rounded px-3 py-2"
-            type="password"
-            value={form.password}
-            onChange={(e) => setForm({ ...form, password: e.target.value })}
-          />
-        </div>
-
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white rounded py-2 font-medium hover:bg-blue-700"
+        <form
+          action="/api/register"
+          method="POST"
+          className="space-y-4 mt-3"
         >
-          Sign up
-        </button>
+          <div className="space-y-1">
+            <label
+              htmlFor="name"
+              className="text-xs font-medium text-slate-600"
+            >
+              Name (optional)
+            </label>
+            <input
+              id="name"
+              name="name"
+              type="text"
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white/90 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400"
+              placeholder="Your name"
+            />
+          </div>
 
-        <p className="text-sm text-center">
+          <div className="space-y-1">
+            <label
+              htmlFor="email"
+              className="text-xs font-medium text-slate-600"
+            >
+              School email
+            </label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              required
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white/90 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400"
+              placeholder="you@school.edu"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <label
+              htmlFor="password"
+              className="text-xs font-medium text-slate-600"
+            >
+              Password
+            </label>
+            <input
+              id="password"
+              name="password"
+              type="password"
+              required
+              className="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm bg-white/90 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400"
+              placeholder="Create a password"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full mt-2 rounded-xl bg-gradient-to-r from-purple-600 via-blue-500 to-red-500 text-white text-sm font-semibold px-4 py-2.5 shadow-md hover:opacity-90"
+          >
+            Sign up
+          </button>
+        </form>
+
+        <p className="text-xs text-slate-500 text-center">
           Already have an account?{" "}
-          <a href="/login" className="text-blue-600 underline">
+          <Link
+            href="/login"
+            className="text-purple-600 font-medium hover:underline"
+          >
             Log in
-          </a>
+          </Link>
         </p>
-      </form>
+      </div>
     </div>
   );
 }
