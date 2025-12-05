@@ -5,11 +5,7 @@ import { createAuthToken } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
   try {
-    // 🔁 CHANGED: Read form data instead of JSON
-    const form = await req.formData();
-    const name = form.get("name") as string | null;
-    const email = form.get("email") as string | null;
-    const password = form.get("password") as string | null;
+    const { name, email, password } = await req.json();
 
     if (!email || !password) {
       return NextResponse.json(
@@ -30,7 +26,7 @@ export async function POST(req: NextRequest) {
 
     const user = await prisma.user.create({
       data: {
-        name: name || undefined,
+        name,
         email,
         passwordHash,
       },
@@ -38,10 +34,11 @@ export async function POST(req: NextRequest) {
 
     const token = createAuthToken({ userId: user.id, email: user.email });
 
-    // 🎯 CHANGED: redirect to dashboard instead of returning JSON
-    const res = NextResponse.redirect(new URL("/dashboard", req.url));
+    const res = NextResponse.json({
+      message: "Registered",
+      user: { id: user.id, email: user.email },
+    });
 
-    // Set the auth cookie like before
     res.cookies.set("ctm_token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
@@ -50,10 +47,10 @@ export async function POST(req: NextRequest) {
     });
 
     return res;
-  } catch (err) {
+  } catch (err: any) {
     console.error("REGISTER_ERROR", err);
     return NextResponse.json(
-      { error: "Server error during registration" },
+      { error: "Server error during registration", detail: String(err) },
       { status: 500 }
     );
   }
