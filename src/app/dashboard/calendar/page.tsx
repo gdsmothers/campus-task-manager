@@ -7,93 +7,130 @@ interface Task {
   title: string;
   dueAt: string | null;
   priority: "LOW" | "MED" | "HIGH";
-  state: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "OVERDUE";
+}
+
+function getMonthMatrix(date: Date) {
+  const year = date.getFullYear();
+  const month = date.getMonth();
+
+  const firstOfMonth = new Date(year, month, 1);
+  const startDay = firstOfMonth.getDay(); // 0=Sun
+
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  const cells: (Date | null)[] = [];
+  for (let i = 0; i < startDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) {
+    cells.push(new Date(year, month, d));
+  }
+  while (cells.length % 7 !== 0) cells.push(null);
+
+  const weeks: (Date | null)[][] = [];
+  for (let i = 0; i < cells.length; i += 7) {
+    weeks.push(cells.slice(i, i + 7));
+  }
+  return weeks;
 }
 
 export default function CalendarPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [currentMonth] = useState(new Date());
 
   useEffect(() => {
     (async () => {
       const res = await fetch("/api/tasks");
       const data = await res.json();
-      setTasks((data.tasks ?? []).filter((t: Task) => t.dueAt));
+      setTasks(data.tasks ?? []);
     })();
   }, []);
 
-  // Group tasks by date string (YYYY-MM-DD)
-  const groups: Record<string, Task[]> = {};
-  for (const task of tasks) {
-    if (!task.dueAt) continue;
-    const d = new Date(task.dueAt);
-    const key = d.toISOString().slice(0, 10);
-    if (!groups[key]) groups[key] = [];
-    groups[key].push(task);
+  const weeks = getMonthMatrix(currentMonth);
+
+  const tasksByDate = new Map<string, Task[]>();
+  for (const t of tasks) {
+    if (!t.dueAt) continue;
+    const key = new Date(t.dueAt).toISOString().slice(0, 10);
+    if (!tasksByDate.has(key)) tasksByDate.set(key, []);
+    tasksByDate.get(key)!.push(t);
   }
 
-  const sortedDates = Object.keys(groups).sort();
+  const monthLabel = currentMonth.toLocaleString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
 
   return (
     <div className="space-y-4">
       <h2 className="text-2xl font-semibold text-purple-700">
-        Calendar View
+        Monthly Calendar
       </h2>
       <p className="text-sm text-slate-600">
-        Tasks are grouped by their due date. This gives a calendar-style
-        overview of your upcoming workload. Future work could render this as a
-        full grid month view.
+        See all tasks with due dates mapped onto a monthly view.
       </p>
 
-      {sortedDates.length === 0 && (
-        <p className="text-sm text-slate-500">
-          No tasks with due dates yet. Add tasks with deadlines from the main
-          dashboard to see them here.
-        </p>
-      )}
+      <div className="rounded-2xl bg-white/90 shadow-sm border border-slate-200 p-4">
+        <div className="flex justify-between items-center mb-2">
+          <span className="font-semibold text-slate-800 text-sm">
+            {monthLabel}
+          </span>
+          <div className="text-[11px] text-slate-500">
+            Tasks are shown on their due dates.
+          </div>
+        </div>
 
-      <div className="space-y-3">
-        {sortedDates.map((dateKey) => {
-          const date = new Date(dateKey);
-          const label = date.toLocaleDateString(undefined, {
-            weekday: "long",
-            month: "short",
-            day: "numeric",
-          });
+        <div className="grid grid-cols-7 gap-2 text-xs text-center mb-2 text-slate-500">
+          {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((d) => (
+            <div key={d}>{d}</div>
+          ))}
+        </div>
 
-          return (
-            <div
-              key={dateKey}
-              className="rounded-2xl bg-white/80 border border-slate-200 shadow-sm p-4"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-slate-800">
-                  {label}
-                </span>
-                <span className="text-xs text-slate-500">
-                  {groups[dateKey].length} task
-                  {groups[dateKey].length !== 1 ? "s" : ""}
-                </span>
-              </div>
-              <ul className="space-y-1">
-                {groups[dateKey].map((task) => (
-                  <li
-                    key={task.id}
-                    className="flex justify-between items-center text-sm rounded-xl bg-slate-50 border border-slate-100 px-3 py-2"
-                  >
-                    <span className="text-slate-800">{task.title}</span>
-                    <span className="text-[11px] text-slate-500">
-                      {new Date(task.dueAt!).toLocaleTimeString(undefined, {
-                        hour: "numeric",
-                        minute: "2-digit",
-                      })}{" "}
-                      • {task.priority}
+        <div className="grid grid-cols-7 gap-2 text-xs">
+          {weeks.flat().map((day, idx) => {
+            if (!day) {
+              return (
+                <div
+                  key={idx}
+                  className="h-20 rounded-xl bg-slate-50 border border-slate-100"
+                />
+              );
+            }
+            const key = day.toISOString().slice(0, 10);
+            const dayTasks = tasksByDate.get(key) ?? [];
+
+            return (
+              <div
+                key={key}
+                className="h-20 rounded-xl border border-slate-100 bg-slate-50/80 p-2 flex flex-col justify-between"
+              >
+                <div className="flex justify-between items-center">
+                  <span className="text-[11px] font-semibold text-slate-700">
+                    {day.getDate()}
+                  </span>
+                  {dayTasks.length > 0 && (
+                    <span className="text-[10px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
+                      {dayTasks.length}
                     </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          );
-        })}
+                  )}
+                </div>
+                <div className="space-y-0.5 mt-1 overflow-hidden">
+                  {dayTasks.slice(0, 2).map((t) => (
+                    <div
+                      key={t.id}
+                      className="text-[10px] truncate rounded bg-purple-50 text-purple-700 px-1 py-0.5"
+                    >
+                      {t.title}
+                    </div>
+                  ))}
+                  {dayTasks.length > 2 && (
+                    <div className="text-[10px] text-slate-400">
+                      +{dayTasks.length - 2} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );

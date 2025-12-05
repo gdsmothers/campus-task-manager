@@ -35,39 +35,81 @@ export default async function DashboardLayout({
 
       <div className="flex flex-1">
 
-        {/* SIDEBAR */}
-        <aside className="hidden md:flex flex-col w-64 bg-white/90 backdrop-blur-md border-r border-purple-200 pt-6 px-4 space-y-2">
+      {/* SIDEBAR */}
+      <aside className="hidden md:flex flex-col w-72 bg-[#235DFF] text-white pt-6 pb-4 px-4 rounded-r-3xl shadow-xl space-y-4">
 
-          <nav className="space-y-2 text-sm font-medium">
-
-            <a href="/dashboard" className="block px-3 py-2 rounded-lg hover:bg-purple-100 text-slate-700">
-              📋 Tasks
-            </a>
-
-            <a href="/dashboard/calendar" className="block px-3 py-2 rounded-lg hover:bg-purple-100 text-slate-700">
-              📅 Calendar
-            </a>
-
-            <a href="/dashboard/analytics" className="block px-3 py-2 rounded-lg hover:bg-purple-100 text-slate-700">
-              📊 Analytics
-            </a>
-
-            <a href="/dashboard/reminders" className="block px-3 py-2 rounded-lg hover:bg-purple-100 text-slate-700">
-              🔔 Reminder Settings
-            </a>
-
-            <a href="/dashboard/priority" className="block px-3 py-2 rounded-lg hover:bg-purple-100 text-slate-700">
-              ⭐ Priority Settings
-            </a>
-          </nav>
-
-          <div className="mt-auto mb-6 border-t border-purple-200 pt-4 text-xs text-slate-500">
-            Logged in as
-            <div className="font-semibold text-slate-800 break-all">
-              {user.email}
-            </div>
+        <div className="flex items-center gap-3 px-1">
+          <div className="h-9 w-9 rounded-2xl bg-white/90 flex items-center justify-center text-[#235DFF] font-bold">
+            CT
           </div>
-        </aside>
+          <div>
+            <p className="text-sm font-semibold">Campus Task</p>
+            <p className="text-[11px] text-white/70">Manager</p>
+          </div>
+        </div>
+
+        {/* Search box */}
+        <div className="mt-4">
+          <input
+            placeholder="Search..."
+            className="w-full rounded-2xl bg-white/15 text-[11px] px-3 py-2 placeholder:text-white/60 text-white border border-white/10 focus:outline-none focus:ring-1 focus:ring-white/70"
+          />
+        </div>
+
+        {/* Menu */}
+        <div className="mt-2 space-y-1 text-[13px]">
+          <p className="text-[10px] uppercase tracking-wide text-white/50 px-1">
+            Menu
+          </p>
+
+          <a href="/dashboard" className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/15">
+            <span>Dashboard</span>
+          </a>
+
+          <a href="/dashboard/calendar" className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/15">
+            <span>Calendar</span>
+          </a>
+
+          <a href="/dashboard/analytics" className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/15">
+            <span>Workload Analytics</span>
+            {/* fake count badge */}
+            <span className="text-[10px] bg-white/90 text-[#235DFF] px-2 py-0.5 rounded-full font-semibold">
+              10
+            </span>
+          </a>
+
+          <a href="/dashboard/reminders" className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/15">
+            <span>Reminder Settings</span>
+          </a>
+
+          <a href="/dashboard/priority" className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/15">
+            <span>Task Priority</span>
+          </a>
+        </div>
+
+        {/* Spacer */}
+        <div className="flex-1" />
+
+        {/* Light/Dark toggle stub (non-functional, purely UI) */}
+        <div className="flex items-center bg-white/10 rounded-2xl p-1 text-[11px]">
+          <button className="flex-1 rounded-2xl bg-white text-[#235DFF] py-1.5 font-medium">
+            Light
+          </button>
+          <button className="flex-1 rounded-2xl text-white/70 py-1.5">
+            Dark
+          </button>
+        </div>
+
+        {/* User info */}
+        <div className="flex items-center justify-between mt-3 bg-white/10 rounded-2xl px-3 py-2">
+          <div>
+            <p className="text-[11px] font-semibold line-clamp-1">
+              {user.email}
+            </p>
+            <p className="text-[10px] text-white/70">Student</p>
+          </div>
+        </div>
+      </aside>
 
         {/* MAIN CONTENT AREA */}
         <main className="flex-1 p-6 max-w-5xl mx-auto">
