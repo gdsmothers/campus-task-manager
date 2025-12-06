@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
+import { SidebarSearch } from "@/components/SidebarSearch";
 import "@/app/globals.css";
 
 export default async function DashboardLayout({
@@ -50,10 +51,9 @@ export default async function DashboardLayout({
 
         {/* Search box */}
         <div className="mt-4">
-          <input
-            placeholder="Search..."
-            className="w-full rounded-2xl bg-white/15 text-[11px] px-3 py-2 placeholder:text-white/60 text-white border border-white/10 focus:outline-none focus:ring-1 focus:ring-white/70"
-          />
+          <div className="mt-4">
+            <SidebarSearch />
+          </div>
         </div>
 
         {/* Menu */}
@@ -69,15 +69,11 @@ export default async function DashboardLayout({
           <a href="/dashboard/calendar" className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/15">
             <span>Calendar</span>
           </a>
-
+          
           <a href="/dashboard/analytics" className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/15">
             <span>Workload Analytics</span>
-            {/* fake count badge */}
-            <span className="text-[10px] bg-white/90 text-[#235DFF] px-2 py-0.5 rounded-full font-semibold">
-              10
-            </span>
           </a>
-
+          
           <a href="/dashboard/reminders" className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/15">
             <span>Reminder Settings</span>
           </a>
@@ -85,20 +81,14 @@ export default async function DashboardLayout({
           <a href="/dashboard/priority" className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/15">
             <span>Task Priority</span>
           </a>
+
+          <a href="/dashboard/canvas" className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-white/15">
+            <span>Canvas Integration</span>
+          </a>
         </div>
 
         {/* Spacer */}
         <div className="flex-1" />
-
-        {/* Light/Dark toggle stub (non-functional, purely UI) */}
-        <div className="flex items-center bg-white/10 rounded-2xl p-1 text-[11px]">
-          <button className="flex-1 rounded-2xl bg-white text-[#235DFF] py-1.5 font-medium">
-            Light
-          </button>
-          <button className="flex-1 rounded-2xl text-white/70 py-1.5">
-            Dark
-          </button>
-        </div>
 
         {/* User info */}
         <div className="flex items-center justify-between mt-3 bg-white/10 rounded-2xl px-3 py-2">

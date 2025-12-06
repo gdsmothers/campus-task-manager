@@ -2,11 +2,15 @@
 
 import { useEffect, useState } from "react";
 
+type TaskPriority = "LOW" | "MED" | "HIGH";
+type TaskState = "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "OVERDUE";
+
 interface Task {
   id: string;
   title: string;
   dueAt: string | null;
-  priority: "LOW" | "MED" | "HIGH";
+  priority: TaskPriority;
+  state: TaskState;
 }
 
 function getMonthMatrix(date: Date) {
@@ -14,7 +18,7 @@ function getMonthMatrix(date: Date) {
   const month = date.getMonth();
 
   const firstOfMonth = new Date(year, month, 1);
-  const startDay = firstOfMonth.getDay(); // 0=Sun
+  const startDay = firstOfMonth.getDay(); // 0 = Sun
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
 
@@ -32,6 +36,14 @@ function getMonthMatrix(date: Date) {
   return weeks;
 }
 
+// Build a local YYYY-MM-DD key (no UTC shift)
+function localDateKey(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export default function CalendarPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [currentMonth] = useState(new Date());
@@ -44,16 +56,16 @@ export default function CalendarPage() {
     })();
   }, []);
 
-  const weeks = getMonthMatrix(currentMonth);
-
   const tasksByDate = new Map<string, Task[]>();
   for (const t of tasks) {
     if (!t.dueAt) continue;
-    const key = new Date(t.dueAt).toISOString().slice(0, 10);
+    const d = new Date(t.dueAt);
+    const key = localDateKey(d);
     if (!tasksByDate.has(key)) tasksByDate.set(key, []);
     tasksByDate.get(key)!.push(t);
   }
 
+  const weeks = getMonthMatrix(currentMonth);
   const monthLabel = currentMonth.toLocaleString(undefined, {
     month: "long",
     year: "numeric",
@@ -74,7 +86,7 @@ export default function CalendarPage() {
             {monthLabel}
           </span>
           <div className="text-[11px] text-slate-500">
-            Tasks are shown on their due dates.
+            Tasks are shown on their due dates (local time).
           </div>
         </div>
 
@@ -94,7 +106,8 @@ export default function CalendarPage() {
                 />
               );
             }
-            const key = day.toISOString().slice(0, 10);
+
+            const key = localDateKey(day);
             const dayTasks = tasksByDate.get(key) ?? [];
 
             return (

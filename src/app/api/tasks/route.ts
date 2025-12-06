@@ -30,24 +30,23 @@ export async function POST(req: NextRequest) {
 
   const { title, dueAt, priority } = await req.json();
 
-  if (!title) {
+  if (!title || typeof title !== "string") {
     return NextResponse.json({ error: "Title is required" }, { status: 400 });
   }
 
-  // 1) Create the task
   const task = await prisma.task.create({
     data: {
-      title,
+      title: title.trim(),
       userId: user.userId,
       priority: priority || "MED",
       dueAt: dueAt ? new Date(dueAt) : null,
     },
   });
 
-  // 2) If task has a due date, create a 1-day-before reminder
+  // Auto-create a reminder 1 day before any task with a due date
   if (task.dueAt) {
     const remindAt = new Date(task.dueAt);
-    remindAt.setDate(remindAt.getDate() - 1); // 1 day before
+    remindAt.setDate(remindAt.getDate() - 1);
 
     await prisma.reminder.create({
       data: {
@@ -59,6 +58,5 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // 3) Return the created task
   return NextResponse.json({ task }, { status: 201 });
 }

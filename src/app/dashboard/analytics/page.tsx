@@ -2,13 +2,19 @@
 
 import { useEffect, useState } from "react";
 
+type TaskPriority = "LOW" | "MED" | "HIGH";
+type TaskState = "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "OVERDUE";
+
 interface Task {
   id: string;
   title: string;
   dueAt: string | null;
-  priority: "LOW" | "MED" | "HIGH";
-  state: "PLANNED" | "IN_PROGRESS" | "COMPLETED" | "OVERDUE";
+  priority: TaskPriority;
+  state: TaskState;
 }
+
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const BUCKETS = ["Morning", "Afternoon", "Evening"] as const;
 
 export default function AnalyticsPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -21,28 +27,23 @@ export default function AnalyticsPage() {
     })();
   }, []);
 
-  const total = tasks.length;
-  const completed = tasks.filter((t) => t.state === "COMPLETED").length;
-  const highPriority = tasks.filter((t) => t.priority === "HIGH").length;
+  // counts[dayOfWeek][bucketIndex]
+  const counts: number[][] = Array.from({ length: 7 }, () =>
+    Array(BUCKETS.length).fill(0)
+  );
 
-  const now = new Date();
-  const sevenDaysFromNow = new Date();
-  sevenDaysFromNow.setDate(now.getDate() + 7);
-
-  const upcomingWeek = tasks.filter((t) => {
-    if (!t.dueAt) return false;
+  for (const t of tasks) {
+    if (!t.dueAt) continue;
     const d = new Date(t.dueAt);
-    return d >= now && d <= sevenDaysFromNow;
-  }).length;
+    const dow = d.getDay();
+    const hour = d.getHours();
+    let bucketIndex = 0;
+    if (hour >= 12 && hour < 18) bucketIndex = 1; // Afternoon
+    else if (hour >= 18) bucketIndex = 2; // Evening
+    counts[dow][bucketIndex]++;
+  }
 
-  const overdue = tasks.filter((t) => {
-    if (!t.dueAt) return false;
-    const d = new Date(t.dueAt);
-    return d < now && t.state !== "COMPLETED";
-  }).length;
-
-  const completionRate =
-    total === 0 ? 0 : Math.round((completed / total) * 100);
+  const maxCount = counts.flat().reduce((m, v) => Math.max(m, v), 0) || 1;
 
   return (
     <div className="space-y-4">
@@ -50,39 +51,54 @@ export default function AnalyticsPage() {
         Workload Analytics
       </h2>
       <p className="text-sm text-slate-600">
-        These metrics are computed from your actual tasks and give insight into
-        completion rate, high-priority load, and upcoming deadlines.
+        Heatmap of how many tasks are due by day of week and time of day.
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="rounded-2xl bg-white/80 shadow-sm border border-slate-200 p-4">
-          <p className="text-xs text-slate-500">Total tasks</p>
-          <p className="text-3xl font-bold text-blue-600 mt-1">{total}</p>
+      <div className="rounded-2xl bg-white/90 shadow-sm border border-slate-200 p-4">
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-xs">
+            <thead>
+              <tr>
+                <th className="text-left text-slate-500 p-2"></th>
+                {BUCKETS.map((b) => (
+                  <th key={b} className="text-center text-slate-500 p-2">
+                    {b}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {DAY_LABELS.map((day, row) => (
+                <tr key={day}>
+                  <td className="text-slate-600 font-medium p-2">{day}</td>
+                  {BUCKETS.map((_, col) => {
+                    const value = counts[row][col];
+                    const intensity = value / maxCount; // 0–1
+                    const bgOpacity = 0.1 + intensity * 0.7;
+                    return (
+                      <td key={col} className="p-1">
+                        <div
+                          className="h-10 rounded-lg flex items-center justify-center text-[10px]"
+                          style={{
+                            backgroundColor: `rgba(129, 140, 248, ${bgOpacity})`,
+                            color: intensity > 0.5 ? "white" : "#1f2933",
+                          }}
+                        >
+                          {value > 0 ? value : ""}
+                        </div>
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <div className="rounded-2xl bg-white/80 shadow-sm border border-slate-200 p-4">
-          <p className="text-xs text-slate-500">Completion rate</p>
-          <p className="text-3xl font-bold text-emerald-600 mt-1">
-            {completionRate}%
-          </p>
-        </div>
-        <div className="rounded-2xl bg-white/80 shadow-sm border border-slate-200 p-4">
-          <p className="text-xs text-slate-500">High priority tasks</p>
-          <p className="text-3xl font-bold text-red-500 mt-1">
-            {highPriority}
-          </p>
-        </div>
-        <div className="rounded-2xl bg-white/80 shadow-sm border border-slate-200 p-4">
-          <p className="text-xs text-slate-500">Due in next 7 days</p>
-          <p className="text-3xl font-bold text-purple-600 mt-1">
-            {upcomingWeek}
-          </p>
-        </div>
+
+        <p className="mt-3 text-[11px] text-slate-500">
+          Darker cells indicate more tasks due in that day/time block.
+        </p>
       </div>
-
-      <p className="text-xs text-slate-500">
-        Future work: add charts and time-of-day heatmaps for when tasks are
-        scheduled or completed, to further improve planning and avoid overload.
-      </p>
     </div>
   );
 }
